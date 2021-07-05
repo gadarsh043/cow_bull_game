@@ -1,11 +1,16 @@
 <template>
   <div>
-    Hello
+    <div class="game container">
+      Hello Gamers
+    </div>
   </div>
 </template>
 
-<script src="./js/game.js">
-</script>
-
-<style scoped>
+<style lang="scss" scoped>
+@import '@/assets/main';
+.game {
+  @include font-light(16px, 1)
+}
 </style>
+
+<script src="./js/game.js"></script>
