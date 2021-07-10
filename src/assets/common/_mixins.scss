@@ -7,8 +7,8 @@ $bold: 700;
 @mixin font-light($fontSize, $fontOpacity) {
   @include base-font;
   font-weight: $light;
-  font-size: fontSize($fontSize);
-  opacity: fontOpacity($fontOpacity);
+  font-size: $fontSize;
+  opacity: $fontOpacity;
 }
 @mixin base-font{
   color: $black;
