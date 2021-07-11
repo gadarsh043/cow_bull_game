@@ -12,14 +12,19 @@ export default new Vuex.Store({
     })
   ],
   state: {
-    randomNumber: []
+    randomNumber: [],
+    logs: []
   },
   getters: {
-    getRandomNumber: state => state.randomNumber
+    getRandomNumber: state => state.randomNumber,
+    getLogs: state => state.logs
   },
   mutations: {
     setRandomNumber (state, value) {
       state.randomNumber = value
+    },
+    setLogs (state, value) {
+      state.logs = value
     }
   },
   actions: {
