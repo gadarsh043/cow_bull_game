@@ -72,6 +72,19 @@
       </div>
       <button id="button" class="goButton" @click="checkCowBull()"><span class="goText">GO</span></button>
     </div>
+    <div class="mask" v-if="giveUpGame"></div>
+    <div v-if="giveUpGame" class="popup">
+      <div class="popup_giveup">
+        Try again, Fail Again, Fail Better!!!
+      </div>
+      <div class="popup_giveup">
+        Attempts tried: {{logs.length}}
+      </div>
+      <div class="popup_giveup">
+        The Number was: {{randomStringNumber}}
+      </div>
+      <button class="popup_tryagain" @click="giveUpGame = false">Try Again</button>
+    </div>
   </div>
 </template>
 
@@ -249,6 +262,39 @@ td, th {
 }
 .goText{
   margin: auto;
+}
+.mask {
+  height: 100%;
+  width: 100%;
+  top: 0;
+  position: fixed;
+  margin: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 99
+}
+.popup {
+  width: 300px;
+  height: 300px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  position: fixed;
+  background-color: white;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  border: 4px solid #0095DA;
+  flex-direction: column;
+  align-items: center;
+  &_giveup {
+    padding: 30px 0px;
+  }
+  &_tryagain {
+    width: 100px;
+    height: 50px;
+    color: #fff;
+    background-color: #0095da;
+  }
 }
 </style>
 

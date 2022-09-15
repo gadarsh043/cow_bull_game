@@ -43,7 +43,8 @@ export default {
       revealNumber2: 'X',
       revealNumber3: 'X',
       revealNumber4: 'X',
-      nonDisclosedDigits: 4
+      nonDisclosedDigits: 4,
+      giveUpGame: false
     }
   },
   mounted () {
@@ -52,7 +53,14 @@ export default {
     this.randomNumberGenerator()
   },
   computed: {
-    ...mapGetters(['getRandomNumber', 'getLogs'])
+    ...mapGetters(['getRandomNumber', 'getLogs']),
+    randomStringNumber () {
+      let number = ''
+      this.randomNumber.forEach(element => {
+        number += String(element)
+      })
+      return number
+    }
   },
   methods: {
     resetStore () {
@@ -78,8 +86,7 @@ export default {
       this.randomNumberGenerator()
     },
     giveUp () {
-      // Logic Left
-      console.log(this.randomNumber)
+      this.giveUpGame = true
       this.resetStore()
     },
     inputOnFocus (position) {
