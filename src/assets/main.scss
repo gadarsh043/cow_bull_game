@@ -6,8 +6,14 @@ body {
   margin: 0;
   padding: 0;
   border: 0;
-  background: $silver-three;
+  background: white;
   font-family: 'Source Sans Pro', sans-serif;
   font-size: 16px;
   color: $black;
+  background-image: url('https://i.ibb.co/qxGdPsv/beach-5299404-1920.jpg');
+
+  /* Center and scale the image nicely */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
