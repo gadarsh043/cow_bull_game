@@ -1,8 +1,10 @@
 <template>
   <div style="height: 900px">
     <div class="game container">
-      <div @click="resetStore" class="top new-game">NEW GAME</div>
-      <div @click="revealNumber" class="top give-up">GIVE UP</div>
+      <div class="game-header">
+        <div @click="resetStore" class="top new-game">NEW GAME</div>
+        <div @click="giveUp" class="top give-up">GIVE UP</div>
+      </div>
       <div class="revealNumber-heading">Reveal Number</div>
       <div class="revealNumber">
         <span></span>
@@ -10,10 +12,10 @@
         <span></span>
         <span></span>
         <span></span>
-        <span>X</span>
-        <span>X</span>
-        <span>X</span>
-        <span>X</span>
+        <span @click="revealNumberWithPosition('1')">{{revealNumber1}}</span>
+        <span @click="revealNumberWithPosition('2')">{{revealNumber2}}</span>
+        <span @click="revealNumberWithPosition('3')">{{revealNumber3}}</span>
+        <span @click="revealNumberWithPosition('4')">{{revealNumber4}}</span>
         <span></span>
         <span></span>
         <span></span>
@@ -32,7 +34,7 @@
       <button class="numButton" :class="{'cross': num8}" @click="num8 = !num8"><span class="goText"><span v-if="!num8">8</span> <span v-else> X </span></span></button>
       <button class="numButton" :class="{'cross': num9}" @click="num9 = !num9"><span class="goText"><span v-if="!num9">9</span> <span v-else> X </span></span></button>
       </div>
-      <div class="logs">
+      <div id="logs" class="logs">
         <div class="logs-heading">
           <span class="logs-heading-text">LOGS</span>
           <button class="moves"><span class="goText"><span> <span>Moves</span> <span class="count">{{logs.length}}</span></span></span></button>
@@ -51,13 +53,13 @@
         </table>
       </div>
       <div class="inputField" v-on:keyup="getNumber($event)">
-        <input class="inputDash" id="a" :class="{ invalid: number1Validity === 'invalid' }" @focus="inputOnFocus(0)" @blur="validate('number1', input1, 0)" min="1" max="9" v-model='input1' maxlength="1" />
-        <input class="inputDash" id="b" :class="{ invalid: number2Validity === 'invalid' }" @focus="inputOnFocus(1)" @blur="validate('number2', input2, 1)" min="1" max="9" v-model='input2' maxlength="1" />
-        <input class="inputDash" id="c" :class="{ invalid: number3Validity === 'invalid' }" @focus="inputOnFocus(2)" @blur="validate('number3', input3, 2)" min="1" max="9" v-model='input3' maxlength="1" />
-        <input class="inputDash" id="d" :class="{ invalid: number4Validity === 'invalid' }" @focus="inputOnFocus(3)" @blur="validate('number4', input4, 3)" min="1" max="9" v-model='input4' maxlength="1" />
+        <input type="tel" class="inputDash" id="a" :class="{ invalid: number1Validity === 'invalid' }" @focus="inputOnFocus(0)" @blur="validate('number1', input1, 0)" min="1" max="9" v-model='input1' maxlength="1" autocomplete="off" />
+        <input type="tel" class="inputDash" id="b" :class="{ invalid: number2Validity === 'invalid' }" @focus="inputOnFocus(1)" @blur="validate('number2', input2, 1)" min="1" max="9" v-model='input2' maxlength="1" autocomplete="off" />
+        <input type="tel" class="inputDash" id="c" :class="{ invalid: number3Validity === 'invalid' }" @focus="inputOnFocus(2)" @blur="validate('number3', input3, 2)" min="1" max="9" v-model='input3' maxlength="1" autocomplete="off" />
+        <input type="tel" class="inputDash" id="d" :class="{ invalid: number4Validity === 'invalid' }" @focus="inputOnFocus(3)" @blur="validate('number4', input4, 3)" min="1" max="9" v-model='input4' maxlength="1" autocomplete="off" />
       </div>
       <div v-if="number1Validity === 'invalid' || number2Validity === 'invalid' || number3Validity === 'invalid' || number4Validity === 'invalid'" class="invalidText">
-        <span style="color:black">Reminder : </span><span>&nbsp; No number to be repeated. Number should be between 1 and 9</span>
+        <span style="color:black">Reminder : </span><span>&nbsp; No number to be repeated, Number should be between 1 and 9 and No Alphabets</span>
       </div>
       <div v-if="notValid" class="invalidText">
         <span>Please Enter Valid Number - This was not considered</span>
@@ -87,16 +89,25 @@
 .top {
   font-weight: 700;
 }
+.game-header {
+  display: flex;
+  justify-content: space-between;
+}
 .new-game {
   transform: rotate(312deg);
   width: 170px;
   height: 60px;
+  color: #0335c9;
   display: flex;
   justify-content: flex-start;
   align-items: center;
   cursor: pointer;
 }
 .give-up {
+  transform: rotate(48deg);
+  width: 170px;
+  height: 60px;
+  color: red;
   display: flex;
   justify-content: flex-end;
   align-items: center;

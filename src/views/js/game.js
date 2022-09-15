@@ -38,7 +38,12 @@ export default {
       num6: false,
       num7: false,
       num8: false,
-      num9: false
+      num9: false,
+      revealNumber1: 'X',
+      revealNumber2: 'X',
+      revealNumber3: 'X',
+      revealNumber4: 'X',
+      nonDisclosedDigits: 4
     }
   },
   mounted () {
@@ -65,25 +70,17 @@ export default {
       this.num7 = false
       this.num8 = false
       this.num9 = false
+      this.revealNumber1 = 'X'
+      this.revealNumber2 = 'X'
+      this.revealNumber3 = 'X'
+      this.revealNumber4 = 'X'
+      this.nonDisclosedDigits = 4
       this.randomNumberGenerator()
     },
-    revealNumber () {
+    giveUp () {
       // Logic Left
       console.log(this.randomNumber)
-      sessionStorage.removeItem('CowBullGame')
-      this.$store.commit('setRandomNumber', [])
-      this.$store.commit('setLogs', [])
-      this.guessingNumber = [null, null, null, null]
-      this.logs = []
-      this.num1 = false
-      this.num2 = false
-      this.num3 = false
-      this.num4 = false
-      this.num5 = false
-      this.num6 = false
-      this.num7 = false
-      this.num8 = false
-      this.num9 = false
+      this.resetStore()
     },
     inputOnFocus (position) {
       this.guessingNumber.splice(position, 1, null)
@@ -138,6 +135,8 @@ export default {
         this.resetInput()
         this.guessingNumber = [null, null, null, null]
       }
+      var changeFocus = document.getElementById('logs')
+      window.scrollTo(changeFocus)
     },
     validityTicker () {
       if (this.number1Validity === 'invalid' || this.number2Validity === 'invalid' || this.number3Validity === 'invalid' || this.number4Validity === 'invalid') {
@@ -193,7 +192,21 @@ export default {
         }
         this.logs.push(obj)
         this.$store.commit('setLogs', this.logs)
-        console.log(this.logs)
+      }
+    },
+    revealNumberWithPosition (position) {
+      if (position === '1') {
+        this.revealNumber1 = this.randomNumber[0]
+        this.nonDisclosedDigits = 3
+      } else if (position === '2') {
+        this.revealNumber2 = this.randomNumber[1]
+        this.nonDisclosedDigits = 2
+      } else if (position === '3') {
+        this.revealNumber3 = this.randomNumber[2]
+        this.nonDisclosedDigits = 1
+      } else {
+        this.revealNumber4 = this.randomNumber[3]
+        this.nonDisclosedDigits = 1
       }
     }
   }

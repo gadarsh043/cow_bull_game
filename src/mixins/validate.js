@@ -36,7 +36,7 @@ export default {
     checkSomething (value, position) {
       const numberString = value
       value = Number(value)
-      if ((value !== 0 || value === null) && !this.guessingNumber.includes(value)) {
+      if ((value !== 0 || value === null) && !this.guessingNumber.includes(value) && !isNaN(value)) {
         this.guessingNumber.splice(position, 1, value)
         return true
       } else if (numberString === null) {
