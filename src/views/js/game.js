@@ -44,7 +44,8 @@ export default {
       revealNumber3: 'X',
       revealNumber4: 'X',
       nonDisclosedDigits: 4,
-      giveUpGame: false
+      giveUpGame: false,
+      win: false
     }
   },
   mounted () {
@@ -83,6 +84,7 @@ export default {
       this.revealNumber3 = 'X'
       this.revealNumber4 = 'X'
       this.nonDisclosedDigits = 4
+      this.win = false
       this.randomNumberGenerator()
     },
     giveUp () {
@@ -191,11 +193,11 @@ export default {
         }
         this.$store.commit('setRandomNumber', this.randomNumber)
         const number = this.guessingNumber.join('')
+        this.win = (cow === 4)
         const obj = {
           num: number,
           cows: cow,
-          bulls: bull,
-          reveal: false
+          bulls: bull
         }
         this.logs.push(obj)
         this.$store.commit('setLogs', this.logs)
