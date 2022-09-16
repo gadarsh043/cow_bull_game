@@ -72,7 +72,7 @@
       </div>
       <button id="button" class="goButton" @click="checkCowBull()"><span class="goText">GO</span></button>
     </div>
-    <div class="mask" v-if="giveUpGame"></div>
+    <div class="mask" v-if="giveUpGame || win"></div>
     <div v-if="giveUpGame" class="popup">
       <div class="popup_giveup">
         Try again, Fail Again, Fail Better!!!
@@ -84,6 +84,18 @@
         The Number was: {{randomStringNumber}}
       </div>
       <button class="popup_tryagain" @click="giveUpGame = false">Try Again</button>
+    </div>
+    <div v-if="win" class="popup">
+      <div class="popup_giveup">
+        Congratulations, you won!!!
+      </div>
+      <div class="popup_giveup">
+        Attempts tried: {{logs.length}}
+      </div>
+      <div class="popup_giveup">
+        The Number was: {{randomStringNumber}}
+      </div>
+      <button class="popup_tryagain" @click="resetStore">Play Again</button>
     </div>
   </div>
 </template>
