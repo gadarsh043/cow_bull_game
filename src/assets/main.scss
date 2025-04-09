@@ -1,6 +1,6 @@
-@import "./common/_color";
-@import "./common/_grid";
-@import "./common/_mixins";
+@use "./common/_color" as *;
+@use "./common/_grid" as *;
+@use "./common/_mixins" as *;
 
 body {
   margin: 0;

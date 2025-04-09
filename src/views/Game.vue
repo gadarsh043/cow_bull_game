@@ -1,313 +1,432 @@
 <template>
-  <div style="height: 900px">
+  <div class="game-wrapper">
     <div class="game container">
+      <!-- Description Section -->
+      <div class="description card">
+        <h2 @click="showDescription = !showDescription" class="description-toggle">
+          How to Play <span class="toggle-icon">{{ showDescription ? '▲' : '▼' }}</span>
+        </h2>
+        <transition name="fade">
+          <div v-if="showDescription" class="description-content">
+            <p>Welcome to <strong>Cows & Bulls</strong>! Crack the secret 4-digit code (1-9, no repeats).</p>
+            <ul>
+              <li><span class="highlight">Cows</span>: Digits in the right position.</li>
+              <li><span class="highlight">Bulls</span>: Digits in the code, wrong position.</li>
+              <li>"Reveal A Clue" costs <strong>3 moves</strong>—use it wisely!</li>
+              <li>"Rule Out Numbers" is free to eliminate digits.</li>
+              <li>Guess and hit "GO" - get 4 cows to win!</li>
+            </ul>
+          </div>
+        </transition>
+      </div>
+
+      <!-- Game Header -->
       <div class="game-header">
-        <div @click="resetStore" class="top new-game">NEW GAME</div>
-        <div @click="giveUp" class="top give-up">GIVE UP</div>
+        <button @click="resetStore" class="top new-game">New Game</button>
+        <button @click="giveUp" class="top give-up">Give Up</button>
       </div>
-      <div class="revealNumber-heading">Reveal Number</div>
+
+      <!-- Reveal Number -->
+      <div class="revealNumber-heading">Reveal a Clue</div>
       <div class="revealNumber">
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span @click="revealNumberWithPosition('1')">{{revealNumber1}}</span>
-        <span @click="revealNumberWithPosition('2')">{{revealNumber2}}</span>
-        <span @click="revealNumberWithPosition('3')">{{revealNumber3}}</span>
-        <span @click="revealNumberWithPosition('4')">{{revealNumber4}}</span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
+        <button v-for="n in 4" :key="n" @click="revealNumberWithPosition(n.toString())" class="reveal-btn">
+          {{ n === 1 ? revealNumber1 : n === 2 ? revealNumber2 : n === 3 ? revealNumber3 : revealNumber4 }}
+        </button>
       </div>
-      <div class="revealNumber-heading">Rule Out Number</div>
+
+      <!-- Rule Out Number -->
+      <div class="revealNumber-heading">Rule Out Numbers</div>
       <div class="numbers">
-      <button class="numButton" :class="{'cross': num1}" @click="num1 = !num1"><span class="goText"><span v-if="!num1">1</span> <span v-else> X </span></span></button>
-      <button class="numButton" :class="{'cross': num2}" @click="num2 = !num2"><span class="goText"><span v-if="!num2">2</span> <span v-else> X </span></span></button>
-      <button class="numButton" :class="{'cross': num3}" @click="num3 = !num3"><span class="goText"><span v-if="!num3">3</span> <span v-else> X </span></span></button>
-      <button class="numButton" :class="{'cross': num4}" @click="num4 = !num4"><span class="goText"><span v-if="!num4">4</span> <span v-else> X </span></span></button>
-      <button class="numButton" :class="{'cross': num5}" @click="num5 = !num5"><span class="goText"><span v-if="!num5">5</span> <span v-else> X </span></span></button>
-      <button class="numButton" :class="{'cross': num6}" @click="num6 = !num6"><span class="goText"><span v-if="!num6">6</span> <span v-else> X </span></span></button>
-      <button class="numButton" :class="{'cross': num7}" @click="num7 = !num7"><span class="goText"><span v-if="!num7">7</span> <span v-else> X </span></span></button>
-      <button class="numButton" :class="{'cross': num8}" @click="num8 = !num8"><span class="goText"><span v-if="!num8">8</span> <span v-else> X </span></span></button>
-      <button class="numButton" :class="{'cross': num9}" @click="num9 = !num9"><span class="goText"><span v-if="!num9">9</span> <span v-else> X </span></span></button>
+        <button v-for="n in 9" :key="n" class="numButton" :class="{ crossed: ruledOut[n-1] }" @click="toggleRuleOut(n)">
+          <span class="num-text">{{ ruledOut[n-1] ? '✖' : n }}</span>
+        </button>
       </div>
-      <div id="logs" class="logs">
-        <div class="logs-heading">
-          <span class="logs-heading-text">LOGS</span>
-          <button class="moves"><span class="goText"><span> <span>Moves</span> <span class="count">{{logs.length}}</span></span></span></button>
-        </div>
+
+      <div class="logs-header">
+        <span class="logs-title">Guess History</span>
+        <div class="moves-sticky">Moves: <span class="count">{{ logs.length }}</span></div>
+      </div>
+      <!-- Logs -->
+      <div id="logs" class="logs card">
         <table>
-          <tr>
-            <th class="main-th">Your Entry</th>
-            <th class="main-th">Cow/s</th>
-            <th class="main-th">Bull/s</th>
-          </tr>
-          <tr v-for="i in logs" :key="i.id">
-            <td> {{i.num}} </td>
-            <td class="cow-bull-count"> <span v-for="j in i.cows" :key="j.id"> <img :src="cow" alt="cow" class="cow-image"></span> <span v-if="i.cows === 0"> - </span> </td>
-            <td class="cow-bull-count"> <span v-for="j in i.bulls" :key="j.id"> <img :src="bull" alt="bull" class="bull-image"></span> <span v-if="i.bulls === 0"> - </span>  </td>
-          </tr>
+          <thead>
+            <tr>
+              <th class="main-th">Guess</th>
+              <th class="main-th">Cows</th>
+              <th class="main-th">Bulls</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(log, index) in logs" :key="index">
+              <td class="guess-cell">{{ log.num }}</td>
+              <td class="cow-bull-cell">
+                <div class="count-wrapper">
+                  <span v-for="i in log.cows" :key="i" class="animal-icon"><img :src="cow" alt="cow" class="cow-image" /></span>
+                  <span v-if="log.cows === 0" class="empty">-</span>
+                </div>
+              </td>
+              <td class="cow-bull-cell">
+                <div class="count-wrapper">
+                  <span v-for="i in log.bulls" :key="i" class="animal-icon"><img :src="bull" alt="bull" class="bull-image" /></span>
+                  <span v-if="log.bulls === 0" class="empty">-</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
         </table>
       </div>
-      <div class="inputField" v-on:keyup="getNumber($event)">
-        <input type="tel" class="inputDash" id="a" :class="{ invalid: number1Validity === 'invalid' }" @focus="inputOnFocus(0)" @blur="validate('number1', input1, 0)" min="1" max="9" v-model='input1' maxlength="1" autocomplete="off" />
-        <input type="tel" class="inputDash" id="b" :class="{ invalid: number2Validity === 'invalid' }" @focus="inputOnFocus(1)" @blur="validate('number2', input2, 1)" min="1" max="9" v-model='input2' maxlength="1" autocomplete="off" />
-        <input type="tel" class="inputDash" id="c" :class="{ invalid: number3Validity === 'invalid' }" @focus="inputOnFocus(2)" @blur="validate('number3', input3, 2)" min="1" max="9" v-model='input3' maxlength="1" autocomplete="off" />
-        <input type="tel" class="inputDash" id="d" :class="{ invalid: number4Validity === 'invalid' }" @focus="inputOnFocus(3)" @blur="validate('number4', input4, 3)" min="1" max="9" v-model='input4' maxlength="1" autocomplete="off" />
+
+      <!-- Input Field -->
+      <div class="inputField">
+        <input v-for="(input, idx) in inputs" :key="idx" type="tel" class="inputDash"
+               :class="{ invalid: validity[idx] === 'invalid' }" :id="'input-' + idx"
+               @focus="inputOnFocus(idx)" @input="updateGuessingNumber(idx, $event)"
+               @blur="validate('number' + (idx + 1), inputs[idx], idx)"
+               min="1" max="9" v-model="inputs[idx]" maxlength="1" autocomplete="off" />
       </div>
-      <div v-if="number1Validity === 'invalid' || number2Validity === 'invalid' || number3Validity === 'invalid' || number4Validity === 'invalid'" class="invalidText">
-        <span style="color:black">Reminder : </span><span>&nbsp; No number to be repeated, Number should be between 1 and 9 and No Alphabets</span>
+
+      <!-- Messages -->
+      <div class="message-box">
+        <transition name="fade">
+          <div v-if="hasInvalidInput" class="invalidText">No repeats, 1-9 only, no letters!</div>
+          <div v-else-if="notValid" class="invalidText">Invalid number—try again!</div>
+          <div v-else-if="enterValue" class="invalidText">Fill all fields first!</div>
+          <div v-else-if="valid" class="correctText">Guess logged—check below!</div>
+        </transition>
       </div>
-      <div v-if="notValid" class="invalidText">
-        <span>Please Enter Valid Number - This was not considered</span>
-      </div>
-      <div v-if="enterValue" class="invalidText">
-        <span>Please enter Value</span>
-      </div>
-      <div v-if="valid" class="correctText">
-        <span>Please check Logs</span>
-      </div>
-      <button id="button" class="goButton" @click="checkCowBull()"><span class="goText">GO</span></button>
+
+      <!-- Go Button -->
+      <button id="button" class="goButton" @click="checkCowBull">
+        <span class="goText">GO</span>
+      </button>
     </div>
+    <!-- Popups -->
     <div class="mask" v-if="giveUpGame || win"></div>
-    <div v-if="giveUpGame" class="popup">
-      <div class="popup_giveup">
-        Try again, Fail Again, Fail Better!!!
-      </div>
-      <div class="popup_giveup">
-        Attempts tried: {{logs.length}}
-      </div>
-      <div class="popup_giveup">
-        The Number was: {{randomStringNumber}}
-      </div>
-      <button class="popup_tryagain" @click="giveUpGame = false">Try Again</button>
+    <div v-if="giveUpGame" class="popup card">
+      <div class="popup-title">Game Over!</div>
+      <div class="popup-text">Moves: {{ logs.length }}</div>
+      <div class="popup-text">Number was: <strong>{{ randomStringNumber }}</strong></div>
+      <button class="popup-btn" @click="resetStore">Try Again</button>
     </div>
-    <div v-if="win" class="popup">
-      <div class="popup_giveup">
-        Congratulations, you won!!!
-      </div>
-      <div class="popup_giveup">
-        Attempts tried: {{logs.length}}
-      </div>
-      <div class="popup_giveup">
-        The Number was: {{randomStringNumber}}
-      </div>
-      <button class="popup_tryagain" @click="resetStore">Play Again</button>
+    <div v-if="win" class="popup card win">
+      <div class="popup-title">You Won! 🎉</div>
+      <div class="popup-text">Moves: {{ logs.length }}</div>
+      <div class="popup-text">Number was: <strong>{{ randomStringNumber }}</strong></div>
+      <button class="popup-btn" @click="resetStore">Play Again</button>
     </div>
   </div>
 </template>
 
+<script src="./js/game.js"></script>
+
 <style lang="scss" scoped>
-@import '@/assets/main';
+.game-wrapper {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1e1e2f, #2a4066);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  font-family: 'Poppins', sans-serif;
+}
+
 .game {
-  @include font-light(16px, 1);
-  margin-top: 20px;
-  border: 1px solid black;
-  height: 95%;
-  background-color: white;
-  overflow: scroll;
-  background-color: rgba(255,255,255,0.5); // Use instead of opacity
+  width: 90%;
+  max-width: 800px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  overflow-y: auto;
+  max-height: 95vh;
 }
-.top {
+
+.card {
+  background: black;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Description */
+.description-toggle {
+  cursor: pointer;
+  font-size: 24px;
   font-weight: 700;
+  color: #ffd700;
+  display: flex;
+  justify-content: space-between;
+  transition: color 0.3s;
 }
+
+.description-toggle:hover { color: #ffeb3b; }
+.toggle-icon { font-size: 18px; }
+.description-content { margin-top: 15px; color: #e0e0e0; font-size: 16px; line-height: 1.6; }
+.highlight { color: #00e676; font-weight: 600; }
+
+/* Game Header */
 .game-header {
   display: flex;
   justify-content: space-between;
+  margin: 25px 0px;
 }
-.new-game {
-  transform: rotate(312deg);
-  width: 170px;
-  height: 60px;
-  color: #0335c9;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  cursor: pointer;
-}
-.give-up {
-  transform: rotate(48deg);
-  width: 170px;
-  height: 60px;
-  color: red;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  cursor: pointer;
-}
-.revealNumber {
-  height: 30px;
-  margin: 10px auto;
-  display: flex;
-  font-weight: 700;
-  justify-content: space-evenly;
-  span {
-    cursor: pointer;
-  }
-  &-heading {
-    margin: 0 auto;
-    font-weight: 700;
-    display: flex;
-    justify-content: center;
-    &-text {
-      width: 90%;
-      display: flex;
-      justify-content: center;
-    }
-  }
-}
-.logs{
-  width: 60%;
-  height: 40%; // variable - keeping change it to suite your height
-  border: 1px solid black;
-  margin: 0 auto;
-  font-weight: 700;
-  background-color: white;
-  background-color: rgba(255,255,255,0.8); // Use instead of opacity
-  overflow: scroll;
-  &-heading {
-    align-items: center;
-    display: flex;
-    justify-content: center;
-    margin: 10px auto;
-    &-text {
-      width: 90%;
-      justify-content: center;
-      display: flex;
-      align-items: center;
-      height: 30px;
-      font-size: 40px;
-    }
-  }
-}
-.cow-image, .bull-image {
-  height: 25px;
-}
-table {
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-}
-td, th {
-  border: 1px solid #dddddd;
-  text-align: left;
-  padding: 8px;
-  text-align: center;
-}
-.main-th {
-  background-color: black;
-  color: white;
-}
-.inputField {
-  margin: 40px auto;
-  height: 10%;
-  width: auto;
-  display: flex;
-  justify-content: space-around;
-  input:focus {
-    background-color: lightblue;
-  }
-}
-.inputDash {
-  margin: 20px auto;
-  width: 10%;
-  height: 50%;
-  border: unset;
-  border-bottom: 3px solid black;
-  text-align: center;
-  font-size: 25px;
-  background-color: unset;
-  font-weight: 700;
-}
-.invalid{
-  border-bottom: 2px solid red;
-  word-break: break-all;
-}
-.invalidText, .correctText{
+
+.top {
   font-size: 16px;
-  font-style: italic;
-  margin: 0 auto;
-  justify-content: center;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  border: none;
+}
+
+.new-game { background: linear-gradient(45deg, #00bcd4, #4dd0e1); color: #fff; }
+.give-up { background: linear-gradient(45deg, #ff5722, #ff8a65); color: #fff; }
+.top:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); }
+
+/* Reveal Number */
+.revealNumber-heading {
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+  margin: 20px 0 10px;
+  color: #00e676;
+  text-transform: uppercase;
+}
+
+.revealNumber {
   display: flex;
-  color: red;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.reveal-btn {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid #ffd700;
+  font-size: 18px;
   font-weight: 700;
-  background-color: rgba(255,255,255,0.4); // Use instead of opacity
+  color: #1e1e2f;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
-.correctText {
-  color: green;
-}
-.numbers{
-  display: flex;
-}
-.goButton, .numButton, .cross, .moves{
-  margin: 10px auto;
-  margin-bottom: 0px;
+
+.reveal-btn:hover { background: #ffd700; transform: rotate(360deg); }
+
+/* Rule Out Number */
+.numbers {
   display: flex;
   justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+}
+
+.numButton {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: lightgreen;
-  border: 3px solid green;
+  background: linear-gradient(45deg, #4caf50, #81c784);
+  border: 3px solid #388e3c;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
-.numButton {
-  margin: 10px auto;
+
+.numButton.crossed { background: linear-gradient(45deg, #f44336, #ef5350); border-color: #d32f2f; }
+.numButton:hover { transform: scale(1.1); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); }
+.num-text { font-size: 20px; font-weight: 700; color: #fff; }
+
+/* Logs */
+.logs {
+  width: 90%;
+  max-height: 200px;
+  margin: 20px auto;
+  overflow-y: auto;
+  padding: 15px;
 }
-.cross, .moves {
-  justify-content: center;
-  background-color: lightcoral;
-  border: 3px solid red;
-  margin: 10px auto;
+
+.logs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  position: relative;
 }
-.moves {
-  background-color: lightskyblue;
-  border: 2px solid blue;
-  cursor: unset;
+
+.logs-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffd700;
 }
-.count {
+
+.moves-sticky {
+  background: #0288d1;
+  border-radius: 20px;
+  padding: 6px 15px;
+  font-size: 14px;
   font-weight: 600;
-  height: 70%;
-}
-.goText{
-  margin: auto;
-}
-.mask {
-  height: 100%;
-  width: 100%;
+  color: #fff;
+  position: sticky;
   top: 0;
-  position: fixed;
-  margin: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 99
+  z-index: 1;
 }
+
+.count {
+  margin-left: 5px;
+  background: #fff;
+  color: #0288d1;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #e0e0e0;
+  table-layout: fixed;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+th, td {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px;
+  text-align: center;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+th { width: 33.33%; }
+.main-th {
+  background: linear-gradient(45deg, #0288d1, #4fc3f7);
+  color: #fff;
+  font-weight: 600;
+  text-transform: uppercase;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.guess-cell { font-weight: 600; }
+.cow-bull-cell { padding: 0; }
+
+.count-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 10px;
+  flex-wrap: nowrap;
+}
+
+.animal-icon img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  transition: transform 0.3s;
+}
+
+.animal-icon:hover img { transform: scale(1.2); }
+.empty { color: #757575; font-size: 16px; }
+
+/* Input Field */
+.inputField {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 30px 0;
+}
+
+.inputDash {
+  width: 55px;
+  height: 55px;
+  border: 3px solid #ffd700;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.9);
+  color: #1e1e2f;
+  transition: all 0.3s ease;
+}
+
+.inputDash:focus { border-color: #00e676; background: #fff; box-shadow: 0 0 10px rgba(0, 230, 118, 0.5); }
+.invalid { border-color: #f44336; background: rgba(244, 67, 54, 0.1); }
+
+/* Messages */
+.message-box { min-height: 24px; text-align: center; margin: 10px 0; }
+.invalidText, .correctText { font-size: 16px; font-weight: 600; padding: 8px 15px; border-radius: 20px; display: inline-block; }
+.invalidText { color: #f44336; background: rgba(244, 67, 54, 0.2); }
+.correctText { color: #00e676; background: rgba(0, 230, 118, 0.2); }
+
+/* Go Button */
+.goButton {
+  display: block;
+  margin: 20px auto;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #ffeb3b, #ffd700);
+  border: 3px solid #fbc02d;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.goButton:hover { transform: scale(1.1); box-shadow: 0 8px 15px rgba(255, 215, 0, 0.5); }
+.goText { font-size: 24px; font-weight: 700; color: #1e1e2f; }
+
+/* Popups */
+.mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 99;
+}
+
 .popup {
-  width: 300px;
-  height: 300px;
+  position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  position: fixed;
-  background-color: white;
+  width: 300px;
+  padding: 20px;
   z-index: 100;
-  display: flex;
-  justify-content: center;
-  border: 4px solid #0095DA;
-  flex-direction: column;
-  align-items: center;
-  &_giveup {
-    padding: 30px 0px;
-  }
-  &_tryagain {
-    width: 100px;
-    height: 50px;
-    color: #fff;
-    background-color: #0095da;
-  }
+  text-align: center;
 }
-</style>
 
-<script src="./js/game.js"></script>
+.win { background: linear-gradient(45deg, #00e676, #4caf50); border: 2px solid #388e3c; }
+.popup-title { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+.popup-text { font-size: 16px; color: #e0e0e0; margin: 8px 0; }
+.popup-btn {
+  width: 120px;
+  height: 45px;
+  background: linear-gradient(45deg, #0288d1, #4fc3f7);
+  border: none;
+  border-radius: 25px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+}
+
+.popup-btn:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); }
+
+/* Animations */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+</style>

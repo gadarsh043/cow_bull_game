@@ -1,10 +1,8 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+// src/store/index.js
+import { createStore } from 'vuex'
 import createPersistedState from 'vuex-persistedstate'
 
-Vue.use(Vuex)
-
-export default new Vuex.Store({
+export default createStore({
   plugins: [
     createPersistedState({
       key: 'CowBullGame',
@@ -20,13 +18,12 @@ export default new Vuex.Store({
     getLogs: state => state.logs
   },
   mutations: {
-    setRandomNumber (state, value) {
+    setRandomNumber(state, value) {
       state.randomNumber = value
     },
-    setLogs (state, value) {
+    setLogs(state, value) {
       state.logs = value
     }
   },
-  actions: {
-  }
+  actions: {}
 })

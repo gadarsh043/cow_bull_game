@@ -1,20 +1,17 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import Home from '../views/Game.vue'
-
-Vue.use(VueRouter)
+// src/router/index.js
+import { createRouter, createWebHistory } from 'vue-router'
+import Game from '../views/Game.vue' // Assuming Game.vue is in src/views/
 
 const routes = [
   {
     path: '/',
     name: 'Game',
-    component: Home
+    component: Game
   }
 ]
 
-const router = new VueRouter({
-  mode: 'history',
-  base: process.env.BASE_URL,
+const router = createRouter({
+  history: createWebHistory(process.env.BASE_URL),
   routes
 })
 

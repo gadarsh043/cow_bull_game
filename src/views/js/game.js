@@ -1,222 +1,176 @@
-
-import validateMixin from '@/mixins/validate.js'
 import { mapGetters } from 'vuex'
 import cow from '@/assets/images/cow.png'
 import bull from '@/assets/images/bull.png'
 
 export default {
   name: 'Game',
-  components: {},
-  mixins: [
-    validateMixin
-  ],
-  data () {
+  data() {
     return {
       cow,
       bull,
-      input1: null,
-      input2: null,
-      input3: null,
-      input4: null,
-      inputNumberAllowed: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      inputs: [null, null, null, null],
       randomNumber: [],
       guessingNumber: [null, null, null, null],
-      number1Validity: 'untouch',
-      number2Validity: 'untouch',
-      number3Validity: 'untouch',
-      number4Validity: 'untouch',
-      secondTime: 0,
+      validity: ['untouch', 'untouch', 'untouch', 'untouch'],
       notValid: false,
       valid: false,
       enterValue: false,
       logs: [],
-      num1: false,
-      num2: false,
-      num3: false,
-      num4: false,
-      num5: false,
-      num6: false,
-      num7: false,
-      num8: false,
-      num9: false,
+      ruledOut: Array(9).fill(false),
       revealNumber1: 'X',
       revealNumber2: 'X',
       revealNumber3: 'X',
       revealNumber4: 'X',
-      nonDisclosedDigits: 4,
       giveUpGame: false,
-      win: false
+      win: false,
+      showDescription: false
     }
   },
-  mounted () {
-    this.randomNumber = this.getRandomNumber
+  mounted() {
+    this.randomNumber = this.getRandomNumber.length ? this.getRandomNumber : this.randomNumberGenerator()
     this.logs = this.getLogs
-    this.randomNumberGenerator()
   },
   computed: {
     ...mapGetters(['getRandomNumber', 'getLogs']),
-    randomStringNumber () {
-      let number = ''
-      this.randomNumber.forEach(element => {
-        number += String(element)
-      })
-      return number
+    randomStringNumber() {
+      return this.randomNumber.join('')
+    },
+    hasInvalidInput() {
+      return this.validity.some(v => v === 'invalid')
     }
   },
   methods: {
-    resetStore () {
+    resetStore() {
       sessionStorage.removeItem('CowBullGame')
       this.$store.commit('setRandomNumber', [])
       this.$store.commit('setLogs', [])
+      this.inputs = [null, null, null, null]
       this.guessingNumber = [null, null, null, null]
+      this.validity = ['untouch', 'untouch', 'untouch', 'untouch']
       this.logs = []
-      this.num1 = false
-      this.num2 = false
-      this.num3 = false
-      this.num4 = false
-      this.num5 = false
-      this.num6 = false
-      this.num7 = false
-      this.num8 = false
-      this.num9 = false
+      this.ruledOut = Array(9).fill(false)
       this.revealNumber1 = 'X'
       this.revealNumber2 = 'X'
       this.revealNumber3 = 'X'
       this.revealNumber4 = 'X'
-      this.nonDisclosedDigits = 4
       this.win = false
+      this.giveUpGame = false
       this.randomNumberGenerator()
     },
-    giveUp () {
+    giveUp() {
       this.giveUpGame = true
-      this.resetStore()
     },
-    inputOnFocus (position) {
-      this.guessingNumber.splice(position, 1, null)
+    inputOnFocus(position) {
+      this.guessingNumber[position] = null
+      this.inputs[position] = null
+      this.validity[position] = 'untouch'
     },
-    getNumber (e) {
-      var target = e.srcElement
-      var maxLength = parseInt(target.attributes.maxlength.value, 10)
-      var myLength = target.value.length
-      if (myLength >= maxLength && myLength < 2) {
-        var next = target
-        if (next.nextElementSibling !== null) {
-          next = next.nextElementSibling
-          if (next.tagName.toLowerCase() === 'input') {
-            next.innerhtml = null
-            next.focus()
-          }
+    updateGuessingNumber(idx, event) {
+      const value = event.target.value
+      this.inputs[idx] = value
+      this.guessingNumber[idx] = value ? parseInt(value) : null
+      this.validate('number' + (idx + 1), value, idx)
+      if (value) {
+        if (idx < 3) {
+          document.getElementById(`input-${idx + 1}`).focus()
         } else {
-          const button = document.getElementById('button')
-          button.focus()
+          document.getElementById('button').focus()
         }
-      } else if (myLength === 0 && this.secondTime === 0) {
-        this.resetInput()
-        this.guessingNumber = [null, null, null, null]
-      } else if (e.key === '0') {
-        this.secondTime = 1
-      } else {
-        this.secondTime = 0
+      } else if (event.inputType === 'deleteContentBackward' && idx > 0) {
+        document.getElementById(`input-${idx - 1}`).focus()
       }
     },
-    randomNumberGenerator () {
-      if (this.getRandomNumber.length === 0) {
-        let array = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-        for (var i = array.length - 1; i > 0; i--) {
-          var j = Math.floor(Math.random() * (i + 1))
-          var temp = array[i]
-          array[i] = array[j]
-          array[j] = temp
-        }
-        array = array.slice(0, 4)
-        this.randomNumber = array
-        this.$store.commit('setRandomNumber', this.randomNumber)
-      } else {
-        this.randomNumber = this.getRandomNumber
+    randomNumberGenerator() {
+      const array = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]]
       }
+      this.randomNumber = array.slice(0, 4)
+      this.$store.commit('setRandomNumber', this.randomNumber)
+      return this.randomNumber
     },
-    checkCowBull () {
+    checkCowBull() {
       if (this.validityTicker()) {
         this.compareRandomAndGuess()
-        this.guessingNumber = [null, null, null, null]
         this.resetInput()
+        this.scrollLogsToBottom()
       } else {
         this.resetInput()
-        this.guessingNumber = [null, null, null, null]
       }
-      var changeFocus = document.getElementById('logs')
-      window.scrollTo(changeFocus)
     },
-    validityTicker () {
-      if (this.number1Validity === 'invalid' || this.number2Validity === 'invalid' || this.number3Validity === 'invalid' || this.number4Validity === 'invalid') {
+    validityTicker() {
+      if (this.hasInvalidInput) {
         this.notValid = true
-        setTimeout(() => {
-          this.notValid = false
-        }, 1000)
+        setTimeout(() => (this.notValid = false), 1000)
         return false
-      } else if (this.guessingNumber.includes(null)) {
+      }
+      if (this.guessingNumber.includes(null)) {
         this.enterValue = true
-        setTimeout(() => {
-          this.enterValue = false
-        }, 1000)
-        return true
-      } else {
-        this.valid = true
-        setTimeout(() => {
-          this.valid = false
-        }, 1000)
-        return true
+        setTimeout(() => (this.enterValue = false), 1000)
+        return false
       }
+      this.valid = true
+      setTimeout(() => (this.valid = false), 1000)
+      return true
     },
-    resetInput () {
-      this.input1 = null
-      this.input2 = null
-      this.input3 = null
-      this.input4 = null
-      const inputField1 = document.getElementById('a')
-      inputField1.focus()
-      this.number1Validity = 'untouch'
-      this.number2Validity = 'untouch'
-      this.number3Validity = 'untouch'
-      this.number4Validity = 'untouch'
+    resetInput() {
+      this.inputs = [null, null, null, null]
+      this.guessingNumber = [null, null, null, null]
+      this.validity = ['untouch', 'untouch', 'untouch', 'untouch']
+      document.getElementById('input-0').focus()
     },
-    compareRandomAndGuess () {
-      if (!this.guessingNumber.includes(null)) {
-        let cow = 0
-        let bull = 0
-        for (let i = 0; i < 4; i++) {
-          if (this.randomNumber[i] === this.guessingNumber[i]) {
-            cow = cow + 1
-          } else if (this.randomNumber.includes(this.guessingNumber[i])) {
-            bull = bull + 1
+    compareRandomAndGuess() {
+      let cows = 0, bulls = 0
+      for (let i = 0; i < 4; i++) {
+        if (this.randomNumber[i] === this.guessingNumber[i]) {
+          cows++
+        } else if (this.randomNumber.includes(this.guessingNumber[i])) {
+          bulls++
+        }
+      }
+      const number = this.guessingNumber.join('')
+      this.logs.push({ num: number, cows, bulls })
+      this.$store.commit('setLogs', this.logs)
+      if (cows === 4) this.win = true
+    },
+    revealNumberWithPosition(position) {
+      const idx = parseInt(position) - 1
+      if (this[`revealNumber${position}`] === 'X') {
+        if (confirm('Revealing a number costs 3 moves. Proceed?')) {
+          this[`revealNumber${position}`] = this.randomNumber[idx]
+          for (let i = 0; i < 3; i++) {
+            this.logs.push({ num: `Reveal ${position}`, cows: 0, bulls: 0 })
           }
+          this.$store.commit('setLogs', this.logs)
+          this.scrollLogsToBottom()
         }
-        this.$store.commit('setRandomNumber', this.randomNumber)
-        const number = this.guessingNumber.join('')
-        this.win = (cow === 4)
-        const obj = {
-          num: number,
-          cows: cow,
-          bulls: bull
-        }
-        this.logs.push(obj)
-        this.$store.commit('setLogs', this.logs)
       }
     },
-    revealNumberWithPosition (position) {
-      if (position === '1') {
-        this.revealNumber1 = this.randomNumber[0]
-        this.nonDisclosedDigits = 3
-      } else if (position === '2') {
-        this.revealNumber2 = this.randomNumber[1]
-        this.nonDisclosedDigits = 2
-      } else if (position === '3') {
-        this.revealNumber3 = this.randomNumber[2]
-        this.nonDisclosedDigits = 1
-      } else {
-        this.revealNumber4 = this.randomNumber[3]
-        this.nonDisclosedDigits = 1
+    toggleRuleOut(num) {
+      this.ruledOut[num - 1] = !this.ruledOut[num - 1]
+    },
+    validate(unique, passVal, position) {
+      const isValid = this.checkSomething(passVal, position)
+      this.validity[position] = isValid ? 'valid' : passVal === null ? 'untouch' : 'invalid'
+    },
+    checkSomething(value, position) {
+      const numValue = value === null || value === '' ? null : Number(value)
+      if (numValue === null) {
+        this.guessingNumber[position] = null
+        return true
       }
+      if (isNaN(numValue) || numValue < 1 || numValue > 9 || (this.guessingNumber.includes(numValue) && this.guessingNumber.indexOf(numValue) !== position)) {
+        return false
+      }
+      this.guessingNumber[position] = numValue
+      return true
+    },
+    scrollLogsToBottom() {
+      this.$nextTick(() => {
+        const logsContainer = document.getElementById('logs')
+        logsContainer.scrollTop = logsContainer.scrollHeight
+      })
     }
   }
 }
